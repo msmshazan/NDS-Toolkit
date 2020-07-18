@@ -219,6 +219,8 @@ namespace NDS_Toolkit
                 public short yMax;
                 public short xMin;
                 public short yMin;
+                public int width => xMax - xMin;
+                public int height => yMax - yMin;
             }
 
             public struct LABL
@@ -305,9 +307,9 @@ namespace NDS_Toolkit
         {
             public string ncgr;
             public string nclr;
-            public string paletteno;
+            public int paletteno;
             public Bgfx.TextureHandle textureId;
-            public ProcessedNCER(string ncgr,string nclr, Bgfx.TextureHandle textureId, string paletteno)
+            public ProcessedNCER(string ncgr,string nclr, Bgfx.TextureHandle textureId, int paletteno)
             {
                 this.textureId = textureId;
                 this.nclr = nclr;
@@ -523,7 +525,8 @@ namespace NDS_Toolkit
                             if (!ProcessedNCERs.ContainsKey(file.FullPath))
                             {
                                 var ncer = (Ncer)(file.Data);
-                                var texture = Bgfx.CreateTexture2D(ncgr.Rahc.NTilesX, ncgr.Rahc.NTilesY, false, 1, Bgfx.TextureFormat.RGBA8, Bgfx.SamplerFlags.V_CLAMP | Bgfx.SamplerFlags.U_CLAMP | Bgfx.SamplerFlags.MIN_POINT | Bgfx.SamplerFlags.MAG_POINT | Bgfx.SamplerFlags.MIP_POINT, IntPtr.Zero);
+                                var bank = ncer.banks[0];
+                                var texture = Bgfx.CreateTexture2D(bank.width, bank.height, false, 1, Bgfx.TextureFormat.RGBA8, Bgfx.SamplerFlags.V_CLAMP | Bgfx.SamplerFlags.U_CLAMP | Bgfx.SamplerFlags.MIN_POINT | Bgfx.SamplerFlags.MAG_POINT | Bgfx.SamplerFlags.MIP_POINT, IntPtr.Zero);
                                 ProcessedNCERs.Add(file.FullPath, new ProcessedNCER("","", texture, 0));
                             }
                         }
@@ -690,7 +693,7 @@ namespace NDS_Toolkit
                                 }
                             }
 
-                            if (file.type == FileTypes.NCGR)
+                            if (file.type == FileTypes.NCER)
                             {
                                 var ncer = (Ncer) file.Data;
 
