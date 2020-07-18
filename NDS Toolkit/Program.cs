@@ -300,6 +300,22 @@ namespace NDS_Toolkit
                 this.textureId = textureId;
             }
         }
+
+        public class ProcessedNCER
+        {
+            public string ncgr;
+            public string nclr;
+            public string paletteno;
+            public Bgfx.TextureHandle textureId;
+            public ProcessedNCER(string ncgr,string nclr, Bgfx.TextureHandle textureId, string paletteno)
+            {
+                this.textureId = textureId;
+                this.nclr = nclr;
+                this.ncgr = ncgr;
+                this.paletteno = paletteno;
+            }
+        }
+
         private static void Main(string[] args)
         {
             var platform = "x64";
@@ -334,6 +350,7 @@ namespace NDS_Toolkit
             var imGuiShader = LoadEffect("vs_imgui.bin", "fs_imgui.bin");
 
             var activeFiles = new Dictionary<string, ParsedFile>();
+            var ProcessedNCERs = new Dictionary<string, ProcessedNCER>();
             var ProcessedNCGRs = new Dictionary<string, ProcessedNCGR>();
             bool fileParsed = false;
             var parsedFiles = new List<Tuple<ParsedFile, StringCollection>>();
@@ -496,9 +513,18 @@ namespace NDS_Toolkit
                         {
                             if (!ProcessedNCGRs.ContainsKey(file.FullPath))
                             {
-                                var ncgr = (Ncgr)file.Data;
+                                var ncgr = (Ncgr)(file.Data);
                                 var texture = Bgfx.CreateTexture2D(ncgr.Rahc.NTilesX, ncgr.Rahc.NTilesY, false, 1, Bgfx.TextureFormat.RGBA8, Bgfx.SamplerFlags.V_CLAMP | Bgfx.SamplerFlags.U_CLAMP | Bgfx.SamplerFlags.MIN_POINT | Bgfx.SamplerFlags.MAG_POINT | Bgfx.SamplerFlags.MIP_POINT, IntPtr.Zero);
                                 ProcessedNCGRs.Add(file.FullPath, new ProcessedNCGR("", texture, 0));
+                            }
+                        }
+                        if (file.type == FileTypes.NCER)
+                        {
+                            if (!ProcessedNCERs.ContainsKey(file.FullPath))
+                            {
+                                var ncer = (Ncer)(file.Data);
+                                var texture = Bgfx.CreateTexture2D(ncgr.Rahc.NTilesX, ncgr.Rahc.NTilesY, false, 1, Bgfx.TextureFormat.RGBA8, Bgfx.SamplerFlags.V_CLAMP | Bgfx.SamplerFlags.U_CLAMP | Bgfx.SamplerFlags.MIN_POINT | Bgfx.SamplerFlags.MAG_POINT | Bgfx.SamplerFlags.MIP_POINT, IntPtr.Zero);
+                                ProcessedNCERs.Add(file.FullPath, new ProcessedNCER("","", texture, 0));
                             }
                         }
                         var name = Path.GetFileName(file.FullPath);
@@ -662,6 +688,12 @@ namespace NDS_Toolkit
                                         }
                                     }
                                 }
+                            }
+
+                            if (file.type == FileTypes.NCGR)
+                            {
+                                var ncer = (Ncer) file.Data;
+
                             }
                         }
                         ImGui.End();
@@ -837,17 +869,13 @@ namespace NDS_Toolkit
         {
             if (c1.obj2.priority < c2.obj2.priority)
                 return 1;
-            else if (c1.obj2.priority > c2.obj2.priority)
+            if (c1.obj2.priority > c2.obj2.priority)
                 return -1;
-            else   // Same priority
-            {
-                if (c1.num_cell < c2.num_cell)
-                    return 1;
-                else if (c1.num_cell > c2.num_cell)
-                    return -1;
-                else // Same cell
-                    return 0;
-            }
+            if (c1.num_cell < c2.num_cell)
+                return 1;
+            if (c1.num_cell > c2.num_cell)
+                return -1;
+            return 0;
         }
 
         private static Bank[] Convert_Banks(Ncer ncer)
@@ -871,18 +899,15 @@ namespace NDS_Toolkit
         {
             if (c1.obj2.priority < c2.obj2.priority)
                 return 1;
-            else if (c1.obj2.priority > c2.obj2.priority)
+            if (c1.obj2.priority > c2.obj2.priority)
                 return -1;
-            else   // Same priority
-            {
-                if (c1.num_cell < c2.num_cell)
-                    return 1;
-                else if (c1.num_cell > c2.num_cell)
-                    return -1;
-                else // Same cell
-                    return 0;
-            }
+            if (c1.num_cell < c2.num_cell)
+                return 1;
+            if (c1.num_cell > c2.num_cell)
+                return -1;
+            return 0;
         }
+
         private static Vector2 Get_OAMSize(byte shape, byte size)
         {
             Vector2 imageSize = new Vector2();
